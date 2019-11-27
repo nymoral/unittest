@@ -12,6 +12,7 @@ public class StringUtils {
      *
      * @param objects A list of objects.
      * @return a comma separated list of values1
+     * @throws NullPointerException if input is <c>null</c>
      */
     public static String toCommaSeparatedList(List<Object> objects) {
         Objects.requireNonNull(objects);

@@ -26,15 +26,22 @@ public class PasswordUtils {
     private static String hashPassword(String plaintextPassword, String salt) {
         MessageDigest digest;
         try {
+            // Get SHA256 message digest instance from Java Cryptographic Provider
             digest = MessageDigest.getInstance("SHA-255");
         } catch (NoSuchAlgorithmException e) {
+            // SHA256 is guaranteed to be present in all Java implementations.
             throw new IllegalStateException(e);
         }
+        // Add salt bytes into digest source
         digest.update(salt.getBytes(StandardCharsets.UTF_8));
+        // Add password itself into digest source
         digest.update(plaintextPassword.getBytes(StandardCharsets.UTF_8));
 
+        // Calculate the salt and password hash
         byte[] hash = digest.digest();
 
+        // Return the salt and Base64 encoded hash separated by a special symbol.
+        // We need to save the salt to be able to verify a password later
         return salt + SALT_SEPARATOR + Base64.getEncoder().encodeToString(hash);
     }
 
@@ -46,11 +53,12 @@ public class PasswordUtils {
      * @return true if the passwords match.
      */
     public static boolean validatePassword(String plaintext, String hashedPassword) {
-        // Salt - hash pair
+        // Split the hashed password into salt and hash pair
         String[] parts = hashedPassword.split(Pattern.quote(SALT_SEPARATOR));
         if (parts.length != 2) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Salt (or password) not found. Maybe the password was not hashed with hashPassword(String)?");
         }
+        // Compare the saved hash and newly calculated hash produced using the same salt
         return hashedPassword.equals(hashPassword(plaintext, parts[0]));
     }
 
@@ -60,7 +68,7 @@ public class PasswordUtils {
      * @param length the length of required string
      * @return a string of alphanumeric characters
      */
-    static String makeSalt(int length) {
+    private static String makeSalt(int length) {
         char[] src = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
         Random r = ThreadLocalRandom.current();
         StringBuilder salt = new StringBuilder();
